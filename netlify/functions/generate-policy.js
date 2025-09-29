@@ -5,8 +5,8 @@ exports.handler = async (event, context) => {
         return {
             statusCode: 200,
             headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Origin': 'https://www.finokapi.com',
+                'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
                 'Access-Control-Allow-Methods': 'POST, OPTIONS',
             },
             body: ''
@@ -18,9 +18,37 @@ exports.handler = async (event, context) => {
         return {
             statusCode: 405,
             headers: {
-                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Origin': 'https://www.finokapi.com',
             },
             body: JSON.stringify({ error: 'Method not allowed' })
+        };
+    }
+    
+    // Check 1: Referrer validation (allow calls only from finokapi.com)
+    const referer = event.headers.referer || event.headers.referrer || '';
+    if (!referer.includes('finokapi.com')) {
+        console.log('Blocked request - invalid referrer:', referer);
+        return {
+            statusCode: 403,
+            headers: {
+                'Access-Control-Allow-Origin': 'https://www.finokapi.com',
+            },
+            body: JSON.stringify({ error: 'Access denied' })
+        };
+    }
+    
+    // Check 2: API Key validation
+    const apiKey = event.headers['x-api-key'];
+    const validApiKey = process.env.API_KEY;
+    
+    if (!apiKey || apiKey !== validApiKey) {
+        console.log('Blocked request - invalid or missing API key');
+        return {
+            statusCode: 401,
+            headers: {
+                'Access-Control-Allow-Origin': 'https://www.finokapi.com',
+            },
+            body: JSON.stringify({ error: 'Unauthorized' })
         };
     }
     
@@ -50,8 +78,8 @@ exports.handler = async (event, context) => {
         return {
             statusCode: 200,
             headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Origin': 'https://www.finokapi.com',
+                'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
                 'Access-Control-Allow-Methods': 'POST, OPTIONS',
                 'Content-Type': 'application/json',
             },
@@ -63,7 +91,7 @@ exports.handler = async (event, context) => {
         return {
             statusCode: 500,
             headers: {
-                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Origin': 'https://www.finokapi.com',
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ error: 'Internal server error', message: error.message })
