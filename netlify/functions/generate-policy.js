@@ -73,7 +73,19 @@ exports.handler = async (event, context) => {
             throw new Error(`n8n webhook failed: ${response.status}`);
         }
         
-        const result = await response.json();
+        // Get response as text first for debugging
+        const responseText = await response.text();
+        console.log('n8n raw response:', responseText.substring(0, 500));
+        
+        // Try to parse as JSON
+        let result;
+        try {
+            result = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('JSON parse error:', parseError);
+            console.error('Response was:', responseText);
+            throw new Error('Invalid JSON response from n8n');
+        }
         
         return {
             statusCode: 200,
