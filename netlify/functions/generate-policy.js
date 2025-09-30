@@ -54,6 +54,34 @@ exports.handler = async (event, context) => {
     
     try {
         const formData = JSON.parse(event.body);
+
+        // Check 3: Verify reCAPTCHA
+        const recaptchaToken = formData.recaptcha_token;
+        if (recaptchaToken) {
+            const recaptchaSecret = process.env.RECAPTCHA_SECRET_KEY;
+            const recaptchaVerify = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `secret=${recaptchaSecret}&response=${recaptchaToken}`
+            });
+            
+            const recaptchaResult = await recaptchaVerify.json();
+            console.log('reCAPTCHA verification:', recaptchaResult);
+            
+            if (!recaptchaResult.success) {
+                console.log('reCAPTCHA verification failed');
+                return {
+                    statusCode: 403,
+                    headers: {
+                        'Access-Control-Allow-Origin': 'https://www.finokapi.com',
+                    },
+                    body: JSON.stringify({ error: 'reCAPTCHA verification failed' })
+                };
+            }
+            
+            // Remove recaptcha_token before sending to n8n
+            delete formData.recaptcha_token;
+        }
         
         // Your n8n webhook URL (stored securely)
         const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || 'https://finokapi.app.n8n.cloud/webhook/e070409b-7313-4c3c-b670-346c0b9f53ce';
