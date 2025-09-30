@@ -126,12 +126,14 @@ exports.handler = async (event, context) => {
             body: JSON.stringify(result)
         };
         
-    } catch (error) {
+} catch (error) {
         console.error('Error:', error);
         return {
             statusCode: 500,
             headers: {
                 'Access-Control-Allow-Origin': 'https://www.finokapi.com',
+                'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS',
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ error: 'Internal server error', message: error.message })
